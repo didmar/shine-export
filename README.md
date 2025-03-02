@@ -32,10 +32,33 @@ python main.py <your_bearer_token> --bank-account-id <your_bank_account_id>
 
 # Fetch transactions until a specific date
 python main.py <your_bearer_token> --bank-account-id <your_bank_account_id> --until 2024-01-01
+
+# Specify a custom output file
+python main.py <your_bearer_token> --bank-account-id <your_bank_account_id> --output my_transactions.jsonl
 ```
 
-It will fetch all transactions (or up to the specified date) and save them to `shine_transactions.jsonl`.
-Each line in the output file is a JSON object representing one transaction, which looks like this:
+It will fetch all transactions (or up to the specified date) and save them to `shine_transactions.jsonl` by default.
+
+## Converting to CSV
+
+After exporting the transactions to JSONL, you can convert them to CSV format for easier analysis in spreadsheet software:
+
+```bash
+# Convert the default export file
+python convert_to_csv.py shine_transactions.jsonl
+
+# Specify a custom output file
+python convert_to_csv.py shine_transactions.jsonl --output my_transactions.csv
+```
+
+The CSV file will include all transaction fields plus additional formatted date columns:
+- `transactionDate`: Human-readable date (YYYY-MM-DD) from `transactionAt`
+- `createdDate`: Human-readable date from `createdAt`
+- `updatedDate`: Human-readable date from `updatedAt`
+
+## Transaction Data Format
+
+Each transaction in the JSONL file is a JSON object representing one transaction, which looks like this:
 
 ```json
 {
