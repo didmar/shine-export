@@ -1,5 +1,6 @@
 import argparse
 import json
+import os
 import sys
 from datetime import datetime
 from typing import Optional
@@ -10,13 +11,18 @@ GRAPHQL_URL = "https://api.shine.fr/v2/graphql"
 
 def main():
     parser = argparse.ArgumentParser(description='Export Shine bank transactions')
-    parser.add_argument('token', help='Bearer token from Shine webapp')
+    parser.add_argument('--token', help='Bearer token from Shine webapp (or set SHINE_TOKEN env var)')
     parser.add_argument('--company-id', help='Company profile ID (optional, will be fetched if not provided)')
     parser.add_argument('--bank-account-id', required=True, help='Bank account ID')
     parser.add_argument('--from', dest='from_date', help='Fetch transactions from this date (YYYY-MM-DD), included', required=False)
     parser.add_argument('--until', help='Fetch transactions until this date (YYYY-MM-DD)', required=False)
     parser.add_argument('--output', help='Output file name', required=False, default="shine_transactions.jsonl")
     args = parser.parse_args()
+
+    # Resolve token from argument or environment variable
+    token = args.token or os.environ.get('SHINE_TOKEN')
+    if not token:
+        parser.error('Token required: use --token or set SHINE_TOKEN environment variable')
 
     output_file = args.output
     from_timestamp = parse_date(args.from_date, end_of_day=True) if args.from_date else None
@@ -25,7 +31,7 @@ def main():
     # Get company profile ID if not provided
     company_profile_id = args.company_id
     if not company_profile_id:
-        company_profile_id, company_name, account_status = get_company_info(args.token)
+        company_profile_id, company_name, account_status = get_company_info(token)
         print(f"Company: {company_name} (ID: {company_profile_id}, Status: {account_status})")
 
     if from_timestamp or until_timestamp:
@@ -39,7 +45,7 @@ def main():
         print("Fetching all transactions")
 
     print(f"Saving to {output_file}")
-    total = fetch_transactions(args.token, company_profile_id, args.bank_account_id, output_file, from_timestamp, until_timestamp)
+    total = fetch_transactions(token, company_profile_id, args.bank_account_id, output_file, from_timestamp, until_timestamp)
     print(f"Done! Saved {total} transactions")
 
 def parse_date(date_str: str, end_of_day: bool = False) -> int:
